@@ -2,113 +2,214 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>LuckySpin - Simulation</title>
+<title>Zeus Thunder Slot PRO</title>
+
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #111;
-        color: white;
-        text-align: center;
-        padding-top: 50px;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle, #0b0b1a, #000);
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+}
 
-    .wheel {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        border: 10px solid #444;
-        margin: 20px auto;
-        position: relative;
-        overflow: hidden;
-        transition: transform 3s ease-out;
-        background: conic-gradient(
-            #ff4d4d 0deg 120deg,
-            #4dff4d 120deg 240deg,
-            #4d79ff 240deg 330deg,
-            #ffd24d 330deg 360deg
-        );
-    }
+/* lightning flash */
+.flash {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+}
 
-    .pointer {
-        width: 0;
-        height: 0;
-        border-left: 15px solid transparent;
-        border-right: 15px solid transparent;
-        border-bottom: 25px solid yellow;
-        margin: 0 auto;
-    }
+h1 {
+    color: #ffd700;
+    text-shadow: 0 0 15px #ffd700;
+}
 
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        margin-top: 20px;
-        cursor: pointer;
-        border: none;
-        background: #00c853;
-        color: white;
-        border-radius: 5px;
-    }
+.slot {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
 
-    button:hover {
-        background: #00e676;
-    }
+.reel {
+    width: 90px;
+    height: 90px;
+    border: 3px solid #ffd700;
+    margin: 0 10px;
+    font-size: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #ffd700;
+}
 
-    #result {
-        margin-top: 20px;
-        font-size: 18px;
-    }
+button {
+    padding: 12px 25px;
+    font-size: 16px;
+    border: none;
+    background: #ffd700;
+    color: black;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 10px;
+}
 
-    .box {
-        margin-top: 30px;
-    }
+button:hover {
+    background: #ffea70;
+}
+
+.panel {
+    margin-top: 20px;
+    font-size: 15px;
+}
+
+.history {
+    margin-top: 20px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: #aaa;
+}
+
+.glow {
+    text-shadow: 0 0 10px #ffd700;
+}
+
+input {
+    padding: 5px;
+    width: 80px;
+}
 </style>
 </head>
+
 <body>
 
-<h1>🎡 LuckySpin Simulator</h1>
+<div class="flash" id="flash"></div>
 
-<div class="pointer"></div>
-<div class="wheel" id="wheel"></div>
+<h1>⚡ ZEUS THUNDER SLOT PRO ⚡</h1>
 
-<button onclick="spin()">SPIN</button>
+<p>Masukkan taruhan poin:</p>
+<input type="number" id="bet" value="10" min="1">
 
-<div class="box">
-    <h3>Poin Kamu: <span id="points">0</span></h3>
-    <div id="result"></div>
+<div class="slot">
+    <div class="reel" id="r1">❔</div>
+    <div class="reel" id="r2">❔</div>
+    <div class="reel" id="r3">❔</div>
 </div>
 
+<button onclick="spin()">SPIN ⚡</button>
+
+<div class="panel">
+    💰 Poin: <span id="points">0</span><br>
+    ⚡ Level Zeus: <span id="level">1</span>
+</div>
+
+<div id="result" class="glow"></div>
+
+<h3>📜 History</h3>
+<div class="history" id="history"></div>
+
+<!-- SOUND -->
+<audio id="spinSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
 <script>
-let totalPoints = 0;
-let rotation = 0;
+let points = localStorage.getItem("points") ? parseInt(localStorage.getItem("points")) : 100;
+let xp = localStorage.getItem("xp") ? parseInt(localStorage.getItem("xp")) : 0;
 
-function getReward() {
-    let rand = Math.random() * 100;
+const symbols = ["⚡","👑","🪙","🔱","💎"];
 
-    if (rand < 50) return { points: 10, label: "Small Reward 😐" };
-    if (rand < 80) return { points: 25, label: "Medium Reward 🙂" };
-    if (rand < 95) return { points: 50, label: "Big Reward 😎" };
-    return { points: 100, label: "JACKPOT 🔥" };
+function updateUI(){
+    document.getElementById("points").innerText = points;
+    document.getElementById("level").innerText = Math.floor(xp / 100) + 1;
 }
 
-function spin() {
-    const wheel = document.getElementById("wheel");
-
-    let reward = getReward();
-
-    // rotasi acak
-    let extraRotation = Math.floor(Math.random() * 360) + 1440;
-    rotation += extraRotation;
-
-    wheel.style.transform = `rotate(${rotation}deg)`;
-
-    setTimeout(() => {
-        totalPoints += reward.points;
-
-        document.getElementById("points").innerText = totalPoints;
-        document.getElementById("result").innerHTML =
-            `Hasil: <b>${reward.label}</b> (+${reward.points} poin)`;
-    }, 3000);
+function save(){
+    localStorage.setItem("points", points);
+    localStorage.setItem("xp", xp);
 }
+
+function flashScreen(){
+    let f = document.getElementById("flash");
+    f.style.opacity = 1;
+    setTimeout(()=>{ f.style.opacity = 0; }, 150);
+}
+
+function addHistory(text){
+    let h = document.getElementById("history");
+    h.innerHTML = text + "<br>" + h.innerHTML;
+}
+
+function spin(){
+    let bet = parseInt(document.getElementById("bet").value);
+    if(points < bet){
+        alert("Poin tidak cukup!");
+        return;
+    }
+
+    points -= bet;
+
+    document.getElementById("spinSound").play();
+
+    const r1 = document.getElementById("r1");
+    const r2 = document.getElementById("r2");
+    const r3 = document.getElementById("r3");
+
+    let interval = setInterval(()=>{
+        r1.innerText = symbols[Math.floor(Math.random()*symbols.length)];
+        r2.innerText = symbols[Math.floor(Math.random()*symbols.length)];
+        r3.innerText = symbols[Math.floor(Math.random()*symbols.length)];
+    }, 80);
+
+    setTimeout(()=>{
+        clearInterval(interval);
+
+        let a = symbols[Math.floor(Math.random()*symbols.length)];
+        let b = symbols[Math.floor(Math.random()*symbols.length)];
+        let c = symbols[Math.floor(Math.random()*symbols.length)];
+
+        r1.innerText = a;
+        r2.innerText = b;
+        r3.innerText = c;
+
+        let reward = 0;
+        let msg = "";
+
+        if(a === b && b === c){
+            reward = bet * 10;
+            msg = "🔥 JACKPOT ZEUS +"+reward;
+            flashScreen();
+            document.getElementById("winSound").play();
+        }
+        else if(a===b || b===c || a===c){
+            reward = bet * 3;
+            msg = "⚡ WIN +"+reward;
+        }
+        else{
+            msg = "💨 LOSE";
+        }
+
+        points += reward;
+        xp += reward;
+
+        addHistory(`${a}${b}${c} → ${msg}`);
+
+        updateUI();
+        save();
+
+        document.getElementById("result").innerText = msg;
+
+    }, 1200);
+}
+
+updateUI();
 </script>
 
 </body>
