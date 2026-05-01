@@ -2,34 +2,51 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Zeus Ultra Slot Simulator</title>
+<title>Zeus Slot AAA Modern</title>
 
 <style>
 body{
     margin:0;
     font-family:Arial;
-    background: radial-gradient(circle at top,#2a0000,#000);
+    background: radial-gradient(circle at top,#2b0000,#000);
     color:white;
     text-align:center;
     overflow:hidden;
+}
+
+/* animated lightning bg */
+body::before{
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background: radial-gradient(circle, rgba(255,215,0,0.05), transparent);
+    animation:flash 6s infinite;
+    pointer-events:none;
+}
+
+@keyframes flash{
+    0%,100%{opacity:0;}
+    50%{opacity:1;}
 }
 
 /* HEADER */
 h1{
     color:gold;
     text-shadow:0 0 25px gold;
+    margin-top:10px;
 }
 
-/* TOP BAR */
-.top{
+/* TOP UI */
+.ui{
     display:flex;
     justify-content:center;
     gap:10px;
-    margin-top:10px;
     flex-wrap:wrap;
+    margin-top:10px;
 }
 
-.box{
+.card{
     background:rgba(0,0,0,0.5);
     border:1px solid gold;
     padding:8px 14px;
@@ -45,39 +62,38 @@ h1{
     background:linear-gradient(#1a0000,#000);
     border:2px solid gold;
     border-radius:12px;
-    box-shadow:0 0 20px rgba(255,215,0,0.4);
+    box-shadow:0 0 30px rgba(255,215,0,0.2);
 }
 
 /* GRID */
 .board{
     display:grid;
-    grid-template-columns: repeat(5,64px);
-    grid-template-rows: repeat(3,64px);
+    grid-template-columns: repeat(5,60px);
+    grid-template-rows: repeat(3,60px);
     gap:6px;
 }
 
-/* REEL */
+/* CELL */
 .cell{
-    width:64px;
-    height:64px;
+    width:60px;
+    height:60px;
     background:#120000;
     border:1px solid gold;
     border-radius:8px;
     display:flex;
-    align-items:center;
     justify-content:center;
-    font-size:30px;
-    transition:0.15s;
-    filter: blur(0px);
+    align-items:center;
+    font-size:28px;
+    transition:0.2s;
 }
 
-/* SPIN EFFECT */
-.spinning{
-    filter: blur(4px);
-    transform: scale(0.95);
+/* spin blur */
+.spin{
+    filter:blur(3px);
+    transform:scale(0.95);
 }
 
-/* WIN */
+/* win glow */
 .win{
     background:#004d00 !important;
     box-shadow:0 0 15px lime;
@@ -94,16 +110,15 @@ button{
     cursor:pointer;
 }
 
-.spin{background:gold;}
-.auto{background:#00bcd4;}
+.spinbtn{background:gold;}
+.autobtn{background:#00bcd4;}
 
 /* POPUP */
 .overlay{
     position:fixed;
     width:100%;
     height:100%;
-    top:0;
-    left:0;
+    top:0;left:0;
     background:rgba(0,0,0,0.85);
     display:none;
     justify-content:center;
@@ -139,13 +154,13 @@ button{
 
 <body>
 
-<h1>⚡ ZEUS ULTRA SLOT SIM ⚡</h1>
+<h1>⚡ ZEUS SLOT AAA MODERN ⚡</h1>
 
-<div class="top">
-<div class="box">💰 <span id="points">1000</span></div>
-<div class="box">⭐ LV <span id="level">1</span></div>
-<div class="box">🔥 XP <span id="xp">0</span></div>
-<div class="box">🎁 FS <span id="fs">0</span></div>
+<div class="ui">
+<div class="card">💰 <span id="p">1000</span></div>
+<div class="card">⭐ LV <span id="l">1</span></div>
+<div class="card">🔥 XP <span id="x">0</span></div>
+<div class="card">🎁 FS <span id="fs">0</span></div>
 </div>
 
 <div class="frame">
@@ -154,30 +169,27 @@ button{
 
 <br>
 
-<button class="spin" onclick="spin()">SPIN ⚡</button>
-<button class="auto" onclick="toggleAuto()">AUTO</button>
+<button class="spinbtn" onclick="spin()">SPIN ⚡</button>
+<button class="autobtn" onclick="autoToggle()">AUTO</button>
 
-<div id="result"></div>
+<div id="res"></div>
 
 <!-- WIN POPUP -->
-<div class="overlay" id="winBox">
+<div class="overlay" id="win">
     <h1>🎉 BIG WIN 🎉</h1>
-    <div class="amount" id="winAmount">0</div>
+    <div class="amount" id="amt">0</div>
     <button onclick="closeWin()">CONTINUE</button>
 </div>
 
 <script>
-let points=1000;
-let xp=0;
-let freeSpin=0;
-let auto=false;
+let p=1000,x=0,fs=0,auto=false;
 
-const symbols=["⚡","👑","💰","🔥","💎","🌟"];
+const sym=["⚡","👑","💰","🔥","💎","🌟"];
 
-const board=document.getElementById("board");
+let board=document.getElementById("board");
 let cells=[];
 
-/* CREATE GRID */
+/* GRID */
 for(let i=0;i<15;i++){
     let d=document.createElement("div");
     d.className="cell";
@@ -186,119 +198,111 @@ for(let i=0;i<15;i++){
     cells.push(d);
 }
 
-function rand(){
-    return symbols[Math.floor(Math.random()*symbols.length)];
+function r(){
+    return sym[Math.floor(Math.random()*sym.length)];
 }
 
-/* WIN */
-function showWin(v){
-    document.getElementById("winBox").style.display="flex";
-    document.getElementById("winAmount").innerText="+"+v;
+/* WIN POPUP */
+function show(v){
+    document.getElementById("win").style.display="flex";
+    document.getElementById("amt").innerText="+"+v;
 }
-
 function closeWin(){
-    document.getElementById("winBox").style.display="none";
+    document.getElementById("win").style.display="none";
 }
 
-/* ANIMATION SPIN REALISTIC */
-function animateSpin(cb){
-    let duration=1000;
-    let interval=50;
-
+/* ANIMATED SPIN */
+function spinAnim(cb){
     let t=setInterval(()=>{
         cells.forEach(c=>{
-            c.classList.add("spinning");
-            c.innerText=rand();
+            c.classList.add("spin");
+            c.innerText=r();
         });
-    },interval);
+    },60);
 
     setTimeout(()=>{
         clearInterval(t);
-        cells.forEach(c=>c.classList.remove("spinning"));
+        cells.forEach(c=>c.classList.remove("spin"));
         cb();
-    },duration);
+    },900);
 }
 
-/* MAIN SPIN */
+/* CORE */
 function spin(){
 
     let bet=10;
+    if(fs<=0){
+        if(p<bet) return;
+        p-=bet;
+    }else fs--;
 
-    if(freeSpin<=0){
-        if(points<bet) return;
-        points-=bet;
-    } else {
-        freeSpin--;
-    }
+    spinAnim(()=>{
 
-    animateSpin(()=>{
-
-        let grid=[];
+        let g=[];
         cells.forEach(c=>{
-            let s=rand();
+            let s=r();
             c.innerText=s;
             c.classList.remove("win");
-            grid.push(s);
+            g.push(s);
         });
 
         let reward=0;
         let scatter=0;
 
         /* PAYLINE */
-        for(let r=0;r<3;r++){
-            let i=r*5;
-            if(grid[i]==grid[i+1] && grid[i]==grid[i+2]){
+        for(let i=0;i<3;i++){
+            let r=i*5;
+            if(g[r]==g[r+1] && g[r]==g[r+2]){
                 reward+=50;
-                cells[i].classList.add("win");
-                cells[i+1].classList.add("win");
-                cells[i+2].classList.add("win");
+                cells[r].classList.add("win");
+                cells[r+1].classList.add("win");
+                cells[r+2].classList.add("win");
             }
         }
 
         /* SCATTER */
-        grid.forEach(s=>{
+        g.forEach(s=>{
             if(s==="🌟") scatter++;
         });
 
         if(scatter>=3){
-            freeSpin+=5;
+            fs+=5;
             reward+=100;
             document.body.classList.add("shake");
             setTimeout(()=>document.body.classList.remove("shake"),400);
         }
 
         if(reward>0){
-            points+=reward;
-            xp+=reward;
+            p+=reward;
+            x+=reward;
 
-            showWin(reward);
-            document.getElementById("result").innerText="🔥 WIN "+reward;
+            show(reward);
+            document.getElementById("res").innerText="🔥 WIN "+reward;
         } else {
-            document.getElementById("result").innerText="💨 Lose";
+            document.getElementById("res").innerText="💨 Lose";
         }
 
-        updateUI();
+        update();
 
-        if(auto) setTimeout(spin,600);
-
+        if(auto) setTimeout(spin,500);
     });
 }
 
 /* AUTO */
-function toggleAuto(){
+function autoToggle(){
     auto=!auto;
     if(auto) spin();
 }
 
 /* UI */
-function updateUI(){
-    document.getElementById("points").innerText=points;
-    document.getElementById("xp").innerText=xp;
-    document.getElementById("fs").innerText=freeSpin;
-    document.getElementById("level").innerText=Math.floor(xp/200)+1;
+function update(){
+    document.getElementById("p").innerText=p;
+    document.getElementById("x").innerText=x;
+    document.getElementById("fs").innerText=fs;
+    document.getElementById("l").innerText=Math.floor(x/200)+1;
 }
 
-updateUI();
+update();
 </script>
 
 </body>
