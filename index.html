@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>LuckySpin - Simulation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: white;
+        text-align: center;
+        padding-top: 50px;
+    }
+
+    .wheel {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 10px solid #444;
+        margin: 20px auto;
+        position: relative;
+        overflow: hidden;
+        transition: transform 3s ease-out;
+        background: conic-gradient(
+            #ff4d4d 0deg 120deg,
+            #4dff4d 120deg 240deg,
+            #4d79ff 240deg 330deg,
+            #ffd24d 330deg 360deg
+        );
+    }
+
+    .pointer {
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 25px solid yellow;
+        margin: 0 auto;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin-top: 20px;
+        cursor: pointer;
+        border: none;
+        background: #00c853;
+        color: white;
+        border-radius: 5px;
+    }
+
+    button:hover {
+        background: #00e676;
+    }
+
+    #result {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+
+    .box {
+        margin-top: 30px;
+    }
+</style>
+</head>
+<body>
+
+<h1>🎡 LuckySpin Simulator</h1>
+
+<div class="pointer"></div>
+<div class="wheel" id="wheel"></div>
+
+<button onclick="spin()">SPIN</button>
+
+<div class="box">
+    <h3>Poin Kamu: <span id="points">0</span></h3>
+    <div id="result"></div>
+</div>
+
+<script>
+let totalPoints = 0;
+let rotation = 0;
+
+function getReward() {
+    let rand = Math.random() * 100;
+
+    if (rand < 50) return { points: 10, label: "Small Reward 😐" };
+    if (rand < 80) return { points: 25, label: "Medium Reward 🙂" };
+    if (rand < 95) return { points: 50, label: "Big Reward 😎" };
+    return { points: 100, label: "JACKPOT 🔥" };
+}
+
+function spin() {
+    const wheel = document.getElementById("wheel");
+
+    let reward = getReward();
+
+    // rotasi acak
+    let extraRotation = Math.floor(Math.random() * 360) + 1440;
+    rotation += extraRotation;
+
+    wheel.style.transform = `rotate(${rotation}deg)`;
+
+    setTimeout(() => {
+        totalPoints += reward.points;
+
+        document.getElementById("points").innerText = totalPoints;
+        document.getElementById("result").innerHTML =
+            `Hasil: <b>${reward.label}</b> (+${reward.points} poin)`;
+    }, 3000);
+}
+</script>
+
+</body>
+</html>
